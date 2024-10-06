@@ -8,16 +8,39 @@ const photoPreview = document.getElementById("photoPreview");
 const photoTitle = document.getElementById("photoTitle");
 const cancelBtn = document.getElementById("cancelBtn");
 const publishBtn = document.getElementById("publishBtn");
+const fileInput = document.getElementById("fileInput");
 
 // URL de la API
 const API_URL = "https://67029e2fbd7c8c1ccd3f5e49.mockapi.io/api/create-post";
 
 let stream;
 let facingMode = "environment"; // Inicialmente usamos la cámara trasera
+let hasMultipleCameras = false;
+
+// Función para detectar si el dispositivo tiene múltiples cámaras
+async function checkForMultipleCameras() {
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const videoInputs = devices.filter(
+      (device) => device.kind === "videoinput"
+    );
+    hasMultipleCameras = videoInputs.length > 1;
+
+    if (hasMultipleCameras) {
+      switchCameraBtn.classList.remove("hidden");
+    } else {
+      switchCameraBtn.classList.add("hidden");
+    }
+  } catch (error) {
+    console.error("Error checking for multiple cameras:", error);
+    switchCameraBtn.classList.add("hidden");
+  }
+}
 
 // Función para iniciar la cámara
 async function startCamera() {
   try {
+    await checkForMultipleCameras();
     stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: facingMode },
     });
@@ -33,20 +56,57 @@ async function startCamera() {
 
 // Función para cambiar entre cámaras
 async function switchCamera() {
+  if (!hasMultipleCameras) return;
+
   facingMode = facingMode === "environment" ? "user" : "environment";
   stopCamera();
   await startCamera();
 }
 
-// Función para capturar la foto
+// Función para capturar la foto o procesar la imagen seleccionada
 function capturePhoto() {
   const canvas = document.createElement("canvas");
   canvas.width = cameraPreview.videoWidth;
   canvas.height = cameraPreview.videoHeight;
   canvas.getContext("2d").drawImage(cameraPreview, 0, 0);
-  photoPreview.src = canvas.toDataURL("image/jpeg");
-  stopCamera();
-  showPublishView();
+  convertToWebP(canvas);
+}
+
+// Función para convertir la imagen a WebP
+function convertToWebP(canvas) {
+  canvas.toBlob(
+    (blob) => {
+      const reader = new FileReader();
+      reader.onloadend = function () {
+        photoPreview.src = reader.result;
+        stopCamera();
+        showPublishView();
+      };
+      reader.readAsDataURL(blob);
+    },
+    "image/webp",
+    0.8
+  );
+}
+
+// Función para manejar la selección de archivos
+function handleFileSelect(event) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const img = new Image();
+      img.onload = function () {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        canvas.getContext("2d").drawImage(img, 0, 0);
+        convertToWebP(canvas);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
 }
 
 // Función para detener la cámara
@@ -122,6 +182,7 @@ function updateButtonState() {
 cameraPreview.addEventListener("dblclick", capturePhoto);
 captureBtn.addEventListener("click", capturePhoto);
 switchCameraBtn.addEventListener("click", switchCamera);
+fileInput.addEventListener("change", handleFileSelect);
 cancelBtn.addEventListener("click", () => {
   window.location.href = "index.html";
 });
