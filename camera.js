@@ -26,12 +26,18 @@ async function checkForMultipleCameras() {
     );
     hasMultipleCameras = videoInputs.length > 1;
 
-    if (hasMultipleCameras) {
-      switchCameraBtn.classList.remove("hidden");
-    } else {
-      switchCameraBtn.classList.add("hidden");
-    }
+    updateSwitchCameraButtonVisibility();
   } catch (error) {
+    console.error("Error al verificar múltiples cámaras:", error);
+    updateSwitchCameraButtonVisibility();
+  }
+}
+
+// Función para actualizar la visibilidad del botón de cambio de cámara
+function updateSwitchCameraButtonVisibility() {
+  if (hasMultipleCameras) {
+    switchCameraBtn.classList.remove("hidden");
+  } else {
     switchCameraBtn.classList.add("hidden");
   }
 }
@@ -39,12 +45,14 @@ async function checkForMultipleCameras() {
 // Función para iniciar la cámara
 async function startCamera() {
   try {
-    await checkForMultipleCameras();
     stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: facingMode },
     });
     cameraPreview.srcObject = stream;
     await cameraPreview.play();
+
+    // Verificar nuevamente las cámaras después de que el stream se ha iniciado
+    await checkForMultipleCameras();
   } catch (error) {
     alert(
       "No se pudo acceder a la cámara. Por favor, asegúrate de que tienes permisos de cámara habilitados."
@@ -191,5 +199,8 @@ window.addEventListener("offline", updateButtonState);
 // Inicialización
 document.addEventListener("DOMContentLoaded", () => {
   updateButtonState();
-  startCamera();
+  startCamera().then(() => {
+    // Verificar nuevamente las cámaras después de un breve retraso
+    setTimeout(checkForMultipleCameras, 1000);
+  });
 });
