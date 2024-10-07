@@ -20,13 +20,9 @@ function updateNetworkStatus() {
 async function fetchPosts() {
   try {
     const response = await fetch(API_URL);
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
     const posts = await response.json();
     return posts.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
   } catch (error) {
-    console.error("Error fetching posts:", error);
     return [];
   }
 }
@@ -51,9 +47,9 @@ function createPostHTML(post) {
                     </button>
                 </div>
                 <div class="aspect-w-1 aspect-h-1 bg-gray-200 rounded-lg overflow-hidden">
-                    <img src="${post.imagen}" alt="${
+                       <img src="${post.imagen}" alt="${
     post.titulo
-  }" class="w-full h-full object-center object-cover">
+  }" class="w-full h-full object-center object-cover" loading="lazy">
                 </div>
                 <p class="mt-2 text-sm text-gray-500">
                     ${new Date(post.fecha).toLocaleString()} 
@@ -82,13 +78,12 @@ async function deletePost(id) {
         method: "DELETE",
       });
       if (!response.ok) {
-        throw new Error("Error al borrar la publicación");
+        alert("Error al borrar la publicación");
       }
       alert("Publicación borrada con éxito!");
       renderPosts();
       document.getElementById(`post-${id}`).remove();
     } catch (error) {
-      console.error("Error:", error);
       alert(
         "Hubo un problema al borrar la publicación. Por favor, intenta de nuevo."
       );

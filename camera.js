@@ -32,7 +32,6 @@ async function checkForMultipleCameras() {
       switchCameraBtn.classList.add("hidden");
     }
   } catch (error) {
-    console.error("Error checking for multiple cameras:", error);
     switchCameraBtn.classList.add("hidden");
   }
 }
@@ -47,7 +46,6 @@ async function startCamera() {
     cameraPreview.srcObject = stream;
     await cameraPreview.play();
   } catch (error) {
-    console.error("Error accessing the camera", error);
     alert(
       "No se pudo acceder a la cámara. Por favor, asegúrate de que tienes permisos de cámara habilitados."
     );
@@ -153,13 +151,11 @@ async function publishPhoto() {
     });
 
     if (!response.ok) {
-      throw new Error("Error al publicar la foto");
+      alert("Error al publicar la foto");
     }
-
     alert("Foto publicada con éxito!");
     window.location.href = "index.html";
   } catch (error) {
-    console.error("Error:", error);
     alert("Hubo un problema al publicar la foto. Por favor, intenta de nuevo.");
   }
 }
