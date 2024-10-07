@@ -54,6 +54,7 @@ async function startCamera() {
     // Verificar nuevamente las cámaras después de que el stream se ha iniciado
     await checkForMultipleCameras();
   } catch (error) {
+    window.location.href = "index.html";
     alert(
       "No se pudo acceder a la cámara. Por favor, asegúrate de que tienes permisos de cámara habilitados."
     );
